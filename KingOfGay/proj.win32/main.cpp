@@ -16,7 +16,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     AppDelegate app;
     CCEGLView* eglView = CCEGLView::sharedOpenGLView();
     eglView->setViewName("KingOfGay");
-    eglView->setFrameSize(480, 320);
+    eglView->setFrameSize(1280, 720);
     //eglView->setFrameSize(750, 510);
     return CCApplication::sharedApplication()->run();
 }
