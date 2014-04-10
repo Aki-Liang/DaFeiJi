@@ -26,6 +26,9 @@ bool AppDelegate::applicationDidFinishLaunching() {
     // set FPS. the default value is 1.0/60 if you don't call this
     pDirector->setAnimationInterval(1.0 / 60);
 
+    //set back ground color
+    glClearColor(255, 255, 255, 255);
+
     // create a scene. it's an autorelease object
     CCScene *pScene = StartPage::scene();
 

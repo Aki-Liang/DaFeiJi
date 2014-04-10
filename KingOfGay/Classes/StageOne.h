@@ -17,6 +17,18 @@ public:
 
     // implement the "static node()" method manually
     CREATE_FUNC(StageOne);
+
+    void gameLogic(float dt);
+
+    void updateGame(float dt);
+
+    void ccTouchesEnded(cocos2d::CCSet* pTouches, cocos2d::CCEvent* pEvent);
+    void ccTouchesMoved(cocos2d::CCSet* pTouches, cocos2d::CCEvent* pEvent);
+    void ccTouchesBegin(cocos2d::CCSet *pTouches, cocos2d::CCEvent *pEvent);
+
+private:
+    cocos2d::CCArray* m_targets;
+    cocos2d::CCSprite* m_spSelf;
 };
 
 #endif // __STAGE_ONE_H__

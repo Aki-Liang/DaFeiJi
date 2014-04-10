@@ -13,10 +13,12 @@ public:
     static cocos2d::CCScene* scene();
 
     // a selector callback
-    void menuCloseCallback(CCObject* pSender);
+    //void menuCloseCallback(CCObject* pSender);
 
     // implement the "static node()" method manually
     CREATE_FUNC(StartPage);
+
+    void ccTouchesEnded(cocos2d::CCSet* touches, cocos2d::CCEvent* event);
 };
 
 #endif // __STARTPAGE_H__
