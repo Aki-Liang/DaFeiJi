@@ -61,7 +61,7 @@ bool StageOne::init()
     // see http://www.cocos2d-x.org/boards/6/topics/1478
     this->schedule(schedule_selector(StageOne::updateGame));
 
-    this->schedule(schedule_selector(StageOne::shoot), 0.5);
+    this->schedule(schedule_selector(StageOne::shoot), 0.1);
 
     return true;
 }
@@ -119,7 +119,96 @@ void StageOne::gameLogic(float dt)
 
 void StageOne::updateGame(float dt)
 {
+    CCArray* bulletToDelete = new CCArray;
+    CCObject* iterBullet = NULL;
+    CCObject* iterEnemy = NULL;
 
+    CCARRAY_FOREACH(m_bullets, iterBullet)
+    {
+        CCSprite* pBullet = dynamic_cast<CCSprite*>(iterBullet);
+
+        float fX = 0;
+        float fY = 0;
+        float fWidth = 0;
+        float fHeight = 0;
+
+        fX = pBullet->getPosition().x - (pBullet->getContentSize().width / 2);
+        if (fX < 0)
+        {
+            if (pBullet->getPosition().x < 0)
+            {
+                fWidth = pBullet->getContentSize().width + pBullet->getPosition().x;
+            }
+            else
+            {
+                fWidth = pBullet->getContentSize().width / 2 + pBullet->getPosition().x;
+            }
+            fX = 0;
+        }
+        else
+        {
+            fWidth = pBullet->getContentSize().width;
+        }
+
+        fY = pBullet->getPosition().y - (pBullet->getContentSize().height / 2);
+        if (fY < 0)
+        {
+            if (pBullet->getPosition().y < 0)
+            {
+                fWidth = pBullet->getContentSize().height + pBullet->getPosition().y;
+            }
+            else
+            {
+                fWidth = pBullet->getContentSize().height / 2 + pBullet->getPosition().y;
+            }
+            fY = 0;
+        }
+        else
+        {
+            fHeight = pBullet->getContentSize().height;
+        }
+
+
+        CCRect bulletRect = CCRectMake(fX, fY, fWidth, fHeight);
+
+        CCArray* targetsToDelete = new CCArray;
+
+        CCARRAY_FOREACH(m_targets, iterEnemy)
+        {
+            CCSprite* pEnemy = dynamic_cast<CCSprite*>(iterEnemy);
+            CCRect enemyRect = CCRectMake(
+                pEnemy->getPosition().x - (pEnemy->getContentSize().width / 2),
+                pEnemy->getPosition().y - (pEnemy->getContentSize().height / 2),
+                pEnemy->getContentSize().width,
+                pEnemy->getContentSize().height);
+
+            if (bulletRect.intersectsRect(enemyRect))
+            {
+                targetsToDelete->addObject(iterEnemy);
+            }
+        }
+
+        CCARRAY_FOREACH(targetsToDelete, iterEnemy)
+        {
+            CCSprite* pEnemy = dynamic_cast<CCSprite*>(iterEnemy);
+            m_targets->removeObject(pEnemy);
+            this->removeChild(pEnemy, true);
+        }
+
+        if (targetsToDelete->count()>0)
+        {
+            bulletToDelete->addObject(pBullet);
+        }
+        targetsToDelete->release();
+    }
+
+    CCARRAY_FOREACH(bulletToDelete, iterBullet)
+    {
+        CCSprite* pBullet = dynamic_cast<CCSprite*>(iterBullet);
+        m_targets->removeObject(pBullet);
+        this->removeChild(pBullet, true);
+    }
+    bulletToDelete->release();
 }
 
 void StageOne::shoot(float dt)
@@ -128,19 +217,22 @@ void StageOne::shoot(float dt)
     CCSize winSize = CCDirector::sharedDirector()->getVisibleSize();
     CCPoint origin = CCDirector::sharedDirector()->getVisibleOrigin();
     CCSprite *bullet = CCSprite::create("bullet_soap.png");
+
     bullet->setPosition(ccp(m_pSelf->getPosition().x - m_pSelf->getContentSize().width/2 - bullet->getContentSize().width/2,
                             m_pSelf->getPosition().y));
 
-    this->addChild(bullet);
-
-    float length = bullet->getPosition().x - bullet->getContentSize().width/2;
-    float velocity = 480 / 1; // 480pixels/1sec
+    float length = bullet->getPosition().x + bullet->getContentSize().width / 2;
+    float velocity = winSize.width / 1; // winSize.width/1sec
     float realMoveDuration = length / velocity;
     bullet->runAction(CCSequence::create(CCMoveTo::create(realMoveDuration, ccp(0, bullet->getPosition().y)),
                                          CCCallFuncN::create(this, callfuncN_selector(StageOne::spriteMoveFinished)),
                                          NULL));
+//     bullet->runAction(CCSequence::create(CCMoveBy::create(realMoveDuration, ccp(-winSize.width, 0)),
+//                                          CCCallFuncN::create(this, callfuncN_selector(StageOne::spriteMoveFinished)),
+//                                          NULL));
     bullet->setTag(TAG_MY_BULLET);
     m_bullets->addObject(bullet);
+    this->addChild(bullet);
 }
 
 void StageOne::spriteMoveFinished(CCNode* sender)
@@ -148,13 +240,6 @@ void StageOne::spriteMoveFinished(CCNode* sender)
     CCSprite* pSprite = (CCSprite*)sender;
     this->removeChild(pSprite);
 
-    if (pSprite->getTag() == TAG_ENEMY)
-    {
-        m_targets->removeObject(pSprite);
-    }
-    else if (pSprite)
-    {
-    }
     switch (pSprite->getTag())
     {
     case TAG_ENEMY:
@@ -174,25 +259,109 @@ void StageOne::spriteMoveFinished(CCNode* sender)
 
 void StageOne::ccTouchesBegin(CCSet* pTouches, CCEvent* pEvent)
 {
+    CCSize winSize = CCDirector::sharedDirector()->getVisibleSize();
     // Choose one of the touches to work with
     CCTouch* touch = (CCTouch*)(pTouches->anyObject());
     CCPoint location = touch->getLocation();
-    m_pSelf->setPosition(ccp(location.x, location.y));
+    float fX = 0;
+    float fY = 0;
+    if (location.x < m_pSelf->getContentSize().width / 2)
+    {
+        fX = m_pSelf->getContentSize().width / 2;
+    }
+    else if (winSize.width - m_pSelf->getContentSize().width / 2 < location.x)
+    {
+        fX = winSize.width - m_pSelf->getContentSize().width / 2;
+    }
+    else
+    {
+        fX = location.x;
+    }
+
+    if (location.y < m_pSelf->getContentSize().height / 2)
+    {
+        fY = m_pSelf->getContentSize().height / 2;
+    }
+    else if (winSize.height - m_pSelf->getContentSize().height / 2 < location.y)
+    {
+        fY = winSize.height - m_pSelf->getContentSize().height / 2;
+    }
+    else
+    {
+        fY = location.y;
+    }
+    m_pSelf->setPosition(ccp(fX, fY));
 }
 
 void StageOne::ccTouchesEnded(CCSet* pTouches, CCEvent* pEvent)
 {
+    CCSize winSize = CCDirector::sharedDirector()->getVisibleSize();
     // Choose one of the touches to work with
     CCTouch* touch = (CCTouch*)(pTouches->anyObject());
     CCPoint location = touch->getLocation();
-    m_pSelf->setPosition(ccp(location.x, location.y));
+    float fX = 0;
+    float fY = 0;
+    if (location.x < m_pSelf->getContentSize().width / 2)
+    {
+        fX = m_pSelf->getContentSize().width / 2;
+    }
+    else if (winSize.width - m_pSelf->getContentSize().width / 2 < location.x)
+    {
+        fX = winSize.width - m_pSelf->getContentSize().width / 2;
+    }
+    else
+    {
+        fX = location.x;
+    }
+
+    if (location.y < m_pSelf->getContentSize().height / 2)
+    {
+        fY = m_pSelf->getContentSize().height / 2;
+    }
+    else if (winSize.height - m_pSelf->getContentSize().height / 2 < location.y)
+    {
+        fY = winSize.height - m_pSelf->getContentSize().height / 2;
+    }
+    else
+    {
+        fY = location.y;
+    }
+    m_pSelf->setPosition(ccp(fX, fY));
 }
 
 void StageOne::ccTouchesMoved(CCSet* pTouches, CCEvent* pEvent)
 {
+    CCSize winSize = CCDirector::sharedDirector()->getVisibleSize();
     // Choose one of the touches to work with
     CCTouch* touch = (CCTouch*)(pTouches->anyObject());
     CCPoint location = touch->getLocation();
-    m_pSelf->setPosition(ccp(location.x, location.y));
+    float fX = 0;
+    float fY = 0;
+    if (location.x < m_pSelf->getContentSize().width/2)
+    {
+        fX = m_pSelf->getContentSize().width/2;
+    }
+    else if (winSize.width - m_pSelf->getContentSize().width/2 < location.x)
+    {
+        fX = winSize.width - m_pSelf->getContentSize().width/2;
+    }
+    else
+    {
+        fX = location.x;
+    }
+
+    if (location.y < m_pSelf->getContentSize().height/2)
+    {
+        fY = m_pSelf->getContentSize().height/2;
+    }
+    else if (winSize.height - m_pSelf->getContentSize().height/2 < location.y)
+    {
+        fY = winSize.height - m_pSelf->getContentSize().height/2;
+    }
+    else
+    {
+        fY = location.y;
+    }
+    m_pSelf->setPosition(ccp(fX, fY));
 }
 

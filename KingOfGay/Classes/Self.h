@@ -16,7 +16,7 @@ public:
     const cocos2d::CCSize& getContentSize();
 
     //cocos2d::CCSprite*& getSprite();
-    void Self::addChildToLayer(cocos2d::CCLayer* pLayer);
+    void addChildToLayer(cocos2d::CCLayer* pLayer);
 
     void shoot();
 
