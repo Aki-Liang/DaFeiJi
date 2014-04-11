@@ -55,6 +55,7 @@ bool StageOne::init()
     this->setTouchEnabled(true);
 
     m_targets = new CCArray;
+    m_bullets = new CCArray;
 
     // use updateGame instead of update, otherwise it will conflit with SelectorProtocol::update
     // see http://www.cocos2d-x.org/boards/6/topics/1478
@@ -129,6 +130,17 @@ void StageOne::shoot(float dt)
     CCSprite *bullet = CCSprite::create("bullet_soap.png");
     bullet->setPosition(ccp(m_pSelf->getPosition().x - m_pSelf->getContentSize().width/2 - bullet->getContentSize().width/2,
                             m_pSelf->getPosition().y));
+
+    this->addChild(bullet);
+
+    float length = bullet->getPosition().x - bullet->getContentSize().width/2;
+    float velocity = 480 / 1; // 480pixels/1sec
+    float realMoveDuration = length / velocity;
+    bullet->runAction(CCSequence::create(CCMoveTo::create(realMoveDuration, ccp(0, bullet->getPosition().y)),
+                                         CCCallFuncN::create(this, callfuncN_selector(StageOne::spriteMoveFinished)),
+                                         NULL));
+    bullet->setTag(TAG_MY_BULLET);
+    m_bullets->addObject(bullet);
 }
 
 void StageOne::spriteMoveFinished(CCNode* sender)
