@@ -1,7 +1,22 @@
 #include "StageOne.h"
 
+#define TAG_ENEMY 1
+#define TAG_MY_BULLET 2
+
 USING_NS_CC;
 
+StageOne::StageOne()
+: m_targets(NULL)
+, m_bullets(NULL)
+, m_pSelf(NULL)
+{
+
+}
+
+StageOne::~StageOne()
+{
+
+}
 CCScene* StageOne::scene()
 {
     // 'scene' is an autorelease object
@@ -30,9 +45,10 @@ bool StageOne::init()
     CCPoint origin = CCDirector::sharedDirector()->getVisibleOrigin();
 
     //add self_gay
-    m_spSelf = CCSprite::create("self_gay.png");
-    m_spSelf->setPosition(ccp(visibleSize.width + origin.x - m_spSelf->boundingBox().size.width / 2, visibleSize.height / 2 + origin.y));
-    this->addChild(m_spSelf, 0);
+    m_pSelf = CCSprite::create("self_gay.png");
+    m_pSelf->setPosition(ccp(visibleSize.width + origin.x - m_pSelf->getContentSize().width / 2, visibleSize.height / 2 + origin.y));
+    this->addChild(m_pSelf);
+    //m_pSelf->addChildToLayer(this);
 
     this->schedule(schedule_selector(StageOne::gameLogic), 1.0);
 
@@ -43,6 +59,8 @@ bool StageOne::init()
     // use updateGame instead of update, otherwise it will conflit with SelectorProtocol::update
     // see http://www.cocos2d-x.org/boards/6/topics/1478
     this->schedule(schedule_selector(StageOne::updateGame));
+
+    this->schedule(schedule_selector(StageOne::shoot), 0.5);
 
     return true;
 }
@@ -89,13 +107,12 @@ void StageOne::gameLogic(float dt)
     // Create the actions
     CCFiniteTimeAction* actionMove = CCMoveTo::create((float)actualDuration,
         ccp(winSize.width + target->getContentSize().width / 2, actualY));
-//     CCFiniteTimeAction* actionMoveDone = CCCallFuncN::create(this,
-//         callfuncN_selector(HelloWorld::spriteMoveFinished));
-//    target->runAction(CCSequence::create(actionMove, actionMoveDone, NULL));
-    target->runAction(CCSequence::create(actionMove, NULL));
+    CCFiniteTimeAction* actionMoveDone = CCCallFuncN::create(this,
+        callfuncN_selector(StageOne::spriteMoveFinished));
+    target->runAction(CCSequence::create(actionMove, actionMoveDone, NULL));
 
     // Add to targets array
-    target->setTag(1);
+    target->setTag(TAG_ENEMY);
     m_targets->addObject(target);
 }
 
@@ -104,12 +121,51 @@ void StageOne::updateGame(float dt)
 
 }
 
+void StageOne::shoot(float dt)
+{
+    // Set up initial location of projectile
+    CCSize winSize = CCDirector::sharedDirector()->getVisibleSize();
+    CCPoint origin = CCDirector::sharedDirector()->getVisibleOrigin();
+    CCSprite *bullet = CCSprite::create("bullet_soap.png");
+    bullet->setPosition(ccp(m_pSelf->getPosition().x - m_pSelf->getContentSize().width/2 - bullet->getContentSize().width/2,
+                            m_pSelf->getPosition().y));
+}
+
+void StageOne::spriteMoveFinished(CCNode* sender)
+{
+    CCSprite* pSprite = (CCSprite*)sender;
+    this->removeChild(pSprite);
+
+    if (pSprite->getTag() == TAG_ENEMY)
+    {
+        m_targets->removeObject(pSprite);
+    }
+    else if (pSprite)
+    {
+    }
+    switch (pSprite->getTag())
+    {
+    case TAG_ENEMY:
+        {
+            m_targets->removeObject(pSprite);
+            break;
+        }
+    case TAG_MY_BULLET:
+        {
+            m_bullets->removeObject(pSprite);
+            break;
+        }
+    default:
+        break;
+    }
+}
+
 void StageOne::ccTouchesBegin(CCSet* pTouches, CCEvent* pEvent)
 {
     // Choose one of the touches to work with
     CCTouch* touch = (CCTouch*)(pTouches->anyObject());
     CCPoint location = touch->getLocation();
-    m_spSelf->setPosition(ccp(location.x, location.y));
+    m_pSelf->setPosition(ccp(location.x, location.y));
 }
 
 void StageOne::ccTouchesEnded(CCSet* pTouches, CCEvent* pEvent)
@@ -117,7 +173,7 @@ void StageOne::ccTouchesEnded(CCSet* pTouches, CCEvent* pEvent)
     // Choose one of the touches to work with
     CCTouch* touch = (CCTouch*)(pTouches->anyObject());
     CCPoint location = touch->getLocation();
-    m_spSelf->setPosition(ccp(location.x, location.y));
+    m_pSelf->setPosition(ccp(location.x, location.y));
 }
 
 void StageOne::ccTouchesMoved(CCSet* pTouches, CCEvent* pEvent)
@@ -125,6 +181,6 @@ void StageOne::ccTouchesMoved(CCSet* pTouches, CCEvent* pEvent)
     // Choose one of the touches to work with
     CCTouch* touch = (CCTouch*)(pTouches->anyObject());
     CCPoint location = touch->getLocation();
-    m_spSelf->setPosition(ccp(location.x, location.y));
+    m_pSelf->setPosition(ccp(location.x, location.y));
 }
 

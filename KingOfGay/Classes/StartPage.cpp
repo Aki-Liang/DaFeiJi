@@ -3,6 +3,17 @@
 
 USING_NS_CC;
 
+StartPage::StartPage()
+:m_pLabel(NULL)
+{
+
+}
+
+StartPage::~StartPage()
+{
+
+}
+
 CCScene* StartPage::scene()
 {
     // 'scene' is an autorelease object
@@ -56,14 +67,16 @@ bool StartPage::init()
     // add a label shows "Hello World"
     // create and initialize a label
 
-    CCLabelTTF* pLabel = CCLabelTTF::create("Touch to start", "Arial", 24);
+    m_pLabel = CCLabelTTF::create("Touch to start", "Arial", 24);
 
     // position the label on the center of the screen
-    pLabel->setPosition(ccp(origin.x + visibleSize.width / 2,
-        origin.y + pLabel->getContentSize().height));
+    m_pLabel->setPosition(ccp(origin.x + visibleSize.width / 2,
+        origin.y + m_pLabel->getContentSize().height));
 
     // add the label as a child to this layer
-    this->addChild(pLabel, 1);
+    this->addChild(m_pLabel, 1);
+
+    this->schedule(schedule_selector(StartPage::Blink), 1.0);
 
     // add "HelloWorld" splash screen"
     CCSprite* pSprite = CCSprite::create("StartPage.png");
@@ -97,3 +110,10 @@ void StartPage::ccTouchesEnded(cocos2d::CCSet* touches, cocos2d::CCEvent* event)
 {
     CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5f, StageOne::scene()));
 }
+
+void StartPage::Blink(float dt)
+{
+    CCBlink* pBlink = CCBlink::create(1.0f, 1);
+    m_pLabel->runAction(pBlink);
+}
+

@@ -6,6 +6,8 @@
 class StartPage : public cocos2d::CCLayer
 {
 public:
+    StartPage();
+    ~StartPage();
     // Here's a difference. Method 'init' in cocos2d-x returns bool, instead of returning 'id' in cocos2d-iphone
     virtual bool init();
 
@@ -19,6 +21,11 @@ public:
     CREATE_FUNC(StartPage);
 
     void ccTouchesEnded(cocos2d::CCSet* touches, cocos2d::CCEvent* event);
+
+    void Blink(float dt);
+
+private:
+    cocos2d::CCLabelTTF* m_pLabel;
 };
 
 #endif // __STARTPAGE_H__
