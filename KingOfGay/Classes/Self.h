@@ -9,7 +9,7 @@ public:
     Self();
     ~Self();
 
-    bool init();
+    virtual bool init();
 
     void setPosition(const  cocos2d::CCPoint& pos);
 

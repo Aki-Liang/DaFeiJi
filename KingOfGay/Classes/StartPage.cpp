@@ -1,5 +1,6 @@
 #include "StartPage.h"
 #include "StageOne.h"
+#include "SimpleAudioEngine.h"
 
 USING_NS_CC;
 
@@ -89,6 +90,9 @@ bool StartPage::init()
 
     this->setTouchEnabled(true);
 
+    //play BGM
+    CocosDenshion::SimpleAudioEngine::sharedEngine()->playBackgroundMusic("startpage_bgm.mp3", true);
+
     return true;
 }
 
@@ -108,6 +112,7 @@ bool StartPage::init()
 
 void StartPage::ccTouchesEnded(cocos2d::CCSet* touches, cocos2d::CCEvent* event)
 {
+    CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("GameStart.wav");
     CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5f, StageOne::scene()));
 }
 

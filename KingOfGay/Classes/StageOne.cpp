@@ -1,4 +1,5 @@
 #include "StageOne.h"
+#include "SimpleAudioEngine.h"
 
 #define TAG_ENEMY 1
 #define TAG_MY_BULLET 2
@@ -62,6 +63,8 @@ bool StageOne::init()
     this->schedule(schedule_selector(StageOne::updateGame));
 
     this->schedule(schedule_selector(StageOne::shoot), 0.1);
+
+    CocosDenshion::SimpleAudioEngine::sharedEngine()->playBackgroundMusic("StageOneBGM.mp3", true);
 
     return true;
 }
@@ -193,6 +196,7 @@ void StageOne::updateGame(float dt)
             CCSprite* pEnemy = dynamic_cast<CCSprite*>(iterEnemy);
             m_targets->removeObject(pEnemy);
             this->removeChild(pEnemy, true);
+            CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("EnemyDead.wav");
         }
 
         if (targetsToDelete->count()>0)
@@ -233,6 +237,7 @@ void StageOne::shoot(float dt)
     bullet->setTag(TAG_MY_BULLET);
     m_bullets->addObject(bullet);
     this->addChild(bullet);
+    CocosDenshion::SimpleAudioEngine::sharedEngine()->playEffect("fire.wav");
 }
 
 void StageOne::spriteMoveFinished(CCNode* sender)
